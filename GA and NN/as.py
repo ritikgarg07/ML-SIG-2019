@@ -1,65 +1,11 @@
-"""
-Resources:
-* https://youtu.be/aircAruvnKk
-* http://neuralnetworksanddeeplearning.com/
-* playground.tensorflow.org
-"""
 
-"""
-TASK 1
-
-INSTRUCTIONS:
-
-There are 11 TODOS in this python file
-Fill each one of those appropriately and you will have a working neural network
-Instructions and resources have been provided wherever possible.
-The implementation may not be perfect, so feel free to point out any mistakes / ask any doubts
-
-After completing the task, some of the things you could try are (optional):
-* Implement different cost functions (binary cross-entropy)
-* Implement different activation functions (tanh, ReLU, softmax)
-* Incorporate these changes in the neural netwok code so that you can select the loss / activation function
-* Play with the hyper-paramters!
-"""
-
-"""
-TASK 2
-
-INSTRUCTIONS:
-
-* Go through the documentaation of scikit from:
-  https://scikit-image.org/docs/stable/
-  focus more on the neural network modules
-  https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html (Neural Network Classifier)
-  https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPRegressor.html  (Neural Network Regressor)
-
-* Go through the MNIST dataset given here:
-  http://yann.lecun.com/exdb/mnist/
-  It can also be downloaded directly using scikit:
-  https://scikit-learn.org/0.19/datasets/mldata.html
-  But this seems to be deprecated, you could use a workaround given here:
-  https://stackoverflow.com/questions/47324921/cant-load-mnist-original-dataset-using-sklearn
-
-* Build a simple neural network (using scikit) and train it to recognize handwritten digits using the MNIST datasetself.
-  Make sure that you are able to vsualize the different aspects of the network, play around with the hyper-parameters and
-  try to get the best possible accuracy and report your accuracy on the ML-SIG group / channel
-  Remember to test different hyper-parameters on the validation set and to report the accuracy from the test set
-  https://towardsdatascience.com/train-validation-and-test-sets-72cb40cba9e7
-"""
-
-from matplotlib import pyplot as plt
+#%%
+get_ipython().run_line_magic('matplotlib', 'inline')
+import matplotlib.pyplot as plt
 import numpy as np
 
-"""
-Other Common activation functions are:
-* tanh
-* ReLU
-* Softmax
 
-Read more about these at:
-https://towardsdatascience.com/activation-functions-neural-networks-1cbd9f8d91d6
-"""
-
+#%%
 def activation(z, derivative=False):
     """
     Sigmoid activation function:
@@ -74,14 +20,12 @@ def activation(z, derivative=False):
     pontwize activation on each element of the input z
     """
     if derivative:
-        return np.exp(-z) / np.square(np.exp(-z) + 1)
-        # TODO
-        # return the derivative of the sigmoid activation function
+        return -np.exp(z) / np.square(np.exp(z) + 1)
     else:
-        return 1/(1+np.exp(-z))
-        # TODO
-        # return the normal sigmoid activation function
+        return 1 / (1 - np.exp(z))
 
+
+#%%
 def cost_function(y_true, y_pred):
     """
     Computes the Mean Square Error between a ground truth vector and a prediction vector
@@ -94,12 +38,14 @@ def cost_function(y_true, y_pred):
     cost: a scalar value representing the loss
     """
     n = y_pred.shape[1]
-    cost = (1./(2*n)) * np.sum((y_true - y_pred) ** 2)
+    cost = (1. / (2 * n)) * np.sum((y_true - y_pred)**2)
     return cost
 
+
+#%%
 def cost_function_prime(y_true, y_pred):
     """
-    Computes the derivative of the loss function w.r.t the activation of the output layer, ie-wrt y_pred
+    Computes the derivative of the loss function w.r.t the activation of the output layer
     Parameters:
     ---
     y_true: ground-truth vector
@@ -109,11 +55,12 @@ def cost_function_prime(y_true, y_pred):
     cost_prime: derivative of the loss w.r.t. the activation of the output
     shape: (n[L], batch_size)
     """
-    # TODO
+    cost_prime = y_pred - y_true 
     # Calculate the derivative of the cost function
-    cost_prime = y_pred - y_true
     return cost_prime
 
+
+#%%
 class NeuralNetwork(object):
     '''
     This is a custom neural netwok package built from scratch with numpy.
@@ -147,7 +94,6 @@ class NeuralNetwork(object):
         # biases are initialized randomly
         self.biases = [np.random.rand(n, 1) for n in self.size[1:]]
 
-        # TODO
         # initialize the weights randomly
         """
         Be careful with the dimensions of the weights
@@ -160,7 +106,7 @@ class NeuralNetwork(object):
         (2,4) for weights connecting layers 3 (4) and 4(2)
         Each matrix will be initialized with random values
         """
-        self.weights = np.array([np.random.rand(size[a], size[a-1]) for a in range(1,size.size)])
+        self.weights = np.array([np.random.rand(size[a], size[a-1]) for a in range(1, size.size) ])
 
     def forward(self, input):
         '''
@@ -182,12 +128,11 @@ class NeuralNetwork(object):
         a = input
         pre_activations = []
         activations = [a]
-        # TODO
         # what does the zip function do?
-        #sort of combines the two arrays, pairs corresponding elements, weights and biases in this case
+        # It packs up weights and biases. For eg. if weights=[1, 2, 3] and biases=[4,5,6], Then zip(weights, biases) = [[1,4], [2, 5], [3,6]]         
         for w, b in zip(self.weights, self.biases):
             z = np.dot(w, a) + b
-            a  = activation(z)
+            a = activation(z)
             pre_activations.append(z)
             activations.append(a)
         return a, pre_activations, activations
@@ -197,6 +142,7 @@ class NeuralNetwork(object):
     https://mattmazur.com/2015/03/17/a-step-by-step-backpropagation-example/
     https://hmkcode.github.io/ai/backpropagation-step-by-step/
     """
+
     def compute_deltas(self, pre_activations, y_true, y_pred):
         """
         Computes a list containing the values of delta for each layer using
@@ -215,24 +161,23 @@ class NeuralNetwork(object):
         # initialize array to store the derivatives
         delta = [0] * (len(self.size) - 1)
 
-        #TODO
         # Calculate the delta for each layer
         # This is the first step in calculating the derivative
         #The last layer is calculated as derivative of cost function *  derivative of sigmoid ( pre-activations of last layer )
-        delta[-1] = cost_function_prime(y_true,y_pred) * activation(pre_activations[-1], True)
+        delta[-1] = cost_function_prime(y_true, y_pred) * activation(pre_activations[-1], derivative=True)
 
-
-        #TODO
         # Recursively calculate delta for each layer from the previous layer
-        for l in range(len(delta) - 2, -1, -1):
-            pass
+        for l in range(len(deltas) - 2, -1, -1):
             # deltas of layer l depend on the weights of layer l and l+1 and on the sigmoid derivative of the pre-activations of layer l
             # Note that we use a dot product when multipying the weights and the deltas
             # Check their shapes to ensure that their shapes conform to the requiremnts (You may need to transpose some of the matrices)
             # The final shape of deltas of layer l must be the same as that of the activations of layer l
             # Check if this is true
-            delta[l] = np.dot(self.weights[l+1].transpose(), delta[-1]) * activation(pre_activations[l])
-        return delta
+            
+            delta[l] = np.sum(np.dot(self.weights[l].T, delta[l+1])) * activation(pre_activations[l], True)
+            # I added np.sum here as the shape of deltas and activations has to be same.
+            # Why np.sum ? No sure....But according to me any method for reduction of dimension would work (accuracy might vary) 
+        return deltas
 
     def backpropagate(self, deltas, pre_activations, activations):
         """
@@ -253,18 +198,17 @@ class NeuralNetwork(object):
         db = []
         deltas = [0] + deltas
         for l in range(1, len(self.size)):
-            # TODO
             # Compute the derivatives of the weights and the biases from the delta values calculated earlier
             # dW_temp depends on the activations of layer l-1 and the deltas of layer l
             # dB_temp depends only on the deltas of layer l
             # Again be careful of the dimensions and ensure that the dW matrix has the same shape as W
-            dW_temp = np.dot(deltas[l], activations[l].transpose())
-            dB_temp = deltas[l]
+            dW_temp = np.dot(activations[l-1], deltas[l] ) 
+            db_temp = deltas[l]
             dW.append(dW_temp)
-            db.append(np.expand_dims(dB_temp.mean(axis=1), 1))
+            db.append(np.expand_dims(db_temp.mean(axis=1), 1))
         return dW, db
 
-    def plot_loss(self,epochs,train,test):
+    def plot_loss(self, epochs, train, test):
         """
         Plots the loss function of the train test data measured every epoch
         Parameters:
@@ -276,16 +220,23 @@ class NeuralNetwork(object):
 
         plt.subplot(211)
         plt.title('Training Cost (loss)')
-        plt.plot(range(epochs),train)
+        plt.plot(range(epochs), train)
 
         plt.subplot(212)
         plt.title('Test Cost (loss)')
-        plt.plot(range(epochs),test)
+        plt.plot(range(epochs), test)
 
         plt.subplots_adjust(hspace=0.5)
         plt.show()
 
-    def train(self, X, y, batch_size, epochs, learning_rate, validation_split=0.2, print_every=10):
+    def train(self,
+              X,
+              y,
+              batch_size,
+              epochs,
+              learning_rate,
+              validation_split=0.2,
+              print_every=10):
         """
         Trains the network using the gradients computed by back-propagation
         Splits the data in train and validation splits
@@ -315,9 +266,12 @@ class NeuralNetwork(object):
         history_test_losses = []
         history_test_accuracies = []
 
-        # TODO
         # Read about the train_test_split function
-        x_train, x_test, y_train, y_test = train_test_split(X.T, y.T, test_size=validation_split, )
+        x_train, x_test, y_train, y_test = train_test_split(
+            X.T,
+            y.T,
+            test_size=validation_split,
+        )
         x_train, x_test, y_train, y_test = x_train.T, x_test.T, y_train.T, y_test.T
 
         epoch_iterator = range(epochs)
@@ -326,13 +280,19 @@ class NeuralNetwork(object):
             if x_train.shape[1] % batch_size == 0:
                 n_batches = int(x_train.shape[1] / batch_size)
             else:
-                n_batches = int(x_train.shape[1] / batch_size ) - 1
+                n_batches = int(x_train.shape[1] / batch_size) - 1
 
             x_train, y_train = shuffle(x_train.T, y_train.T)
             x_train, y_train = x_train.T, y_train.T
 
-            batches_x = [x_train[:, batch_size*i:batch_size*(i+1)] for i in range(0, n_batches)]
-            batches_y = [y_train[:, batch_size*i:batch_size*(i+1)] for i in range(0, n_batches)]
+            batches_x = [
+                x_train[:, batch_size * i:batch_size * (i + 1)]
+                for i in range(0, n_batches)
+            ]
+            batches_y = [
+                y_train[:, batch_size * i:batch_size * (i + 1)]
+                for i in range(0, n_batches)
+            ]
 
             train_losses = []
             train_accuracies = []
@@ -344,9 +304,12 @@ class NeuralNetwork(object):
             db_per_epoch = [np.zeros(b.shape) for b in self.biases]
 
             for batch_x, batch_y in zip(batches_x, batches_y):
-                batch_y_pred, pre_activations, activations = self.forward(batch_x)
-                deltas = self.compute_deltas(pre_activations, batch_y, batch_y_pred)
-                dW, db = self.backpropagate(deltas, pre_activations, activations)
+                batch_y_pred, pre_activations, activations = self.forward(
+                    batch_x)
+                deltas = self.compute_deltas(pre_activations, batch_y,
+                                             batch_y_pred)
+                dW, db = self.backpropagate(deltas, pre_activations,
+                                            activations)
                 for i, (dw_i, db_i) in enumerate(zip(dW, db)):
                     dw_per_epoch[i] += dw_i / batch_size
                     db_per_epoch[i] += db_i / batch_size
@@ -355,7 +318,8 @@ class NeuralNetwork(object):
 
                 train_loss = cost_function(batch_y, batch_y_train_pred)
                 train_losses.append(train_loss)
-                train_accuracy = accuracy_score(batch_y.T, batch_y_train_pred.T)
+                train_accuracy = accuracy_score(batch_y.T,
+                                                batch_y_train_pred.T)
                 train_accuracies.append(train_accuracy)
 
                 batch_y_test_pred = self.predict(x_test)
@@ -365,19 +329,16 @@ class NeuralNetwork(object):
                 test_accuracy = accuracy_score(y_test.T, batch_y_test_pred.T)
                 test_accuracies.append(test_accuracy)
 
-
             # weight update
 
-            # TODO
             # What does the enumerate function do?
-            for i, (dw_epoch, db_epoch) in enumerate(zip(dw_per_epoch, db_per_epoch)):
-                pass
-                # TODO
+            # It add index to the object that is being enumerated and returns an enumerate object.
+            
+            for i, (dw_epoch,
+                    db_epoch) in enumerate(zip(dw_per_epoch, db_per_epoch)):
                 # Update the weights using the backpropagation algorithm implemented earlier
-                # W = W - learning_rate * derivatives (dW)
-                # b = b - learning_rate * derivatives (db)
-                # self.weights =
-                # self.biases =
+                self.weights[i] = self.weights[i] - learning_rate * dw_epoch
+                self.biases[i] = self.biases[i] - learning_rate * db_epoch
 
             history_train_losses.append(np.mean(train_losses))
             history_train_accuracies.append(np.mean(train_accuracies))
@@ -385,20 +346,23 @@ class NeuralNetwork(object):
             history_test_losses.append(np.mean(test_losses))
             history_test_accuracies.append(np.mean(test_accuracies))
 
-
             if e % print_every == 0:
-                print('Epoch {} / {} | train loss: {} | train accuracy: {} | val loss : {} | val accuracy : {} '.format(
-                    e, epochs, np.round(np.mean(train_losses), 3), np.round(np.mean(train_accuracies), 3),
-                    np.round(np.mean(test_losses), 3),  np.round(np.mean(test_accuracies), 3)))
+                print(
+                    'Epoch {} / {} | train loss: {} | train accuracy: {} | val loss : {} | val accuracy : {} '
+                    .format(e, epochs, np.round(np.mean(train_losses), 3),
+                            np.round(np.mean(train_accuracies), 3),
+                            np.round(np.mean(test_losses), 3),
+                            np.round(np.mean(test_accuracies), 3)))
 
-        self.plot_loss(epochs,train_loss,test_loss)
+        self.plot_loss(epochs, train_loss, test_loss)
 
-        history = {'epochs': epochs,
-                   'train_loss': history_train_losses,
-                   'train_acc': history_train_accuracies,
-                   'test_loss': history_test_losses,
-                   'test_acc': history_test_accuracies
-                   }
+        history = {
+            'epochs': epochs,
+            'train_loss': history_train_losses,
+            'train_acc': history_train_accuracies,
+            'test_loss': history_test_losses,
+            'test_acc': history_test_accuracies
+        }
         return history
 
     def predict(self, a):
@@ -417,5 +381,4 @@ class NeuralNetwork(object):
         predictions = (a > 0.5).astype(int)
         return predictions
 
-# Author: Ahmed BESBES
-# <ahmed.besbes@hotmail.com>
+
